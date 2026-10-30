@@ -37,16 +37,33 @@ monitorear y probar todo desde el navegador.
 - **Python 3.10+** (probado con 3.14).
 - **Node.js 20+** y npm (solo para el frontend).
 
-## Instalación
+## Instalación rápida (Windows)
+
+1. Descargá el repo: `git clone https://github.com/EdsonAP1/btc.git` (o *Code → Download ZIP*).
+2. **Doble clic en `setup.bat`** (una sola vez).
+3. **Doble clic en `start.bat`** → se abre <http://127.0.0.1:8000>.
+
+`setup.bat` verifica Python 3.10+ y Node 18+, crea el entorno `.venv`, instala las
+dependencias de Python y del frontend, compila el panel y genera `backend\config.json`.
+Es **idempotente**: si lo corrés de nuevo, saltea lo que ya está hecho.
+
+`start.bat` levanta el servidor en una ventana aparte (con logs) y abre el panel en
+el navegador. Para frenarlo, cerrá esa ventana o presioná `Ctrl+C`.
+
+> Si Windows SmartScreen bloquea el `.bat`, elegí *Más información → Ejecutar de todas formas*.
+> Si no tenés MetaTrader 5, el modo **Simulado** funciona igual.
+
+## Instalación manual
 
 ```powershell
 # 1) Backend
-cd backend
-python -m pip install -r requirements.txt
+python -m venv .venv
+.venv\Scripts\python -m pip install -r backend\requirements.txt
 
 # 2) Frontend
-cd ..\frontend
+cd frontend
 npm install
+npm run build
 ```
 
 ## Cómo correrlo
@@ -54,21 +71,14 @@ npm install
 **Opción A — un solo servidor (recomendado para usar el bot):**
 
 ```powershell
-# compilar el panel una vez
-cd frontend
-npm run build
-
-# levantar backend + panel en http://127.0.0.1:8000
-cd ..\backend
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+.venv\Scripts\python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
 **Opción B — desarrollo (hot reload):**
 
 ```powershell
 # terminal 1
-cd backend
-python -m uvicorn app.main:app --reload --port 8000
+.venv\Scripts\python -m uvicorn app.main:app --app-dir backend --reload --port 8000
 
 # terminal 2
 cd frontend
@@ -76,7 +86,8 @@ npm run dev          # http://localhost:5173 (proxy a :8000)
 ```
 
 También hay scripts listos: `scripts\start-backend.ps1`, `scripts\start-frontend.ps1`
-y `scripts\run-tests.ps1`.
+y `scripts\run-tests.ps1` (usan `.venv` automáticamente si existe).
+
 
 ## Uso del panel
 
