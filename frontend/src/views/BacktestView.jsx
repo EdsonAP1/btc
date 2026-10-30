@@ -8,6 +8,7 @@ import { dateTime, num, signedUsd } from '../lib/format.js'
 const TIMEFRAMES = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1']
 
 const EMPTY_FORM = {
+  strategy: 'ema_rsi_atr',
   timeframe: 'M5',
   bars: 5000,
   risk_pct: 1,
@@ -20,6 +21,12 @@ const EMPTY_FORM = {
   sl_atr: 1.6,
   tp_atr: 2.6,
   cooldown_bars: 2,
+  donchian_period: 20,
+  trend_ema: 0,
+  bb_period: 20,
+  bb_std: 2,
+  mr_rsi_low: 30,
+  mr_rsi_high: 70,
 }
 
 export default function BacktestView() {
@@ -34,6 +41,7 @@ export default function BacktestView() {
       .then((cfg) => {
         setForm((prev) => ({
           ...prev,
+          strategy: cfg.strategy?.name ?? prev.strategy,
           timeframe: cfg.timeframe || prev.timeframe,
           bars: cfg.backtest?.bars ?? prev.bars,
           risk_pct: cfg.backtest?.risk_pct ?? prev.risk_pct,
@@ -45,6 +53,12 @@ export default function BacktestView() {
           sl_atr: cfg.strategy?.sl_atr ?? prev.sl_atr,
           tp_atr: cfg.strategy?.tp_atr ?? prev.tp_atr,
           cooldown_bars: cfg.strategy?.cooldown_bars ?? prev.cooldown_bars,
+          donchian_period: cfg.strategy?.donchian_period ?? prev.donchian_period,
+          trend_ema: cfg.strategy?.trend_ema ?? prev.trend_ema,
+          bb_period: cfg.strategy?.bb_period ?? prev.bb_period,
+          bb_std: cfg.strategy?.bb_std ?? prev.bb_std,
+          mr_rsi_low: cfg.strategy?.mr_rsi_low ?? prev.mr_rsi_low,
+          mr_rsi_high: cfg.strategy?.mr_rsi_high ?? prev.mr_rsi_high,
         }))
       })
       .catch(() => {})
@@ -73,6 +87,7 @@ export default function BacktestView() {
         commission_per_lot: Number(form.commission_per_lot || 0),
         spread_points: form.spread_points === '' ? null : Number(form.spread_points),
         params: {
+          name: form.strategy,
           ema_fast: Number(form.ema_fast),
           ema_slow: Number(form.ema_slow),
           rsi_long_max: Number(form.rsi_long_max),
@@ -80,6 +95,12 @@ export default function BacktestView() {
           sl_atr: Number(form.sl_atr),
           tp_atr: Number(form.tp_atr),
           cooldown_bars: Number(form.cooldown_bars),
+          donchian_period: Number(form.donchian_period),
+          trend_ema: Number(form.trend_ema),
+          bb_period: Number(form.bb_period),
+          bb_std: Number(form.bb_std),
+          mr_rsi_low: Number(form.mr_rsi_low),
+          mr_rsi_high: Number(form.mr_rsi_high),
         },
       }
       const data = await runBacktest(payload)
@@ -123,6 +144,14 @@ export default function BacktestView() {
           </div>
 
           <div className="form-grid">
+            <div className="field" style={{ gridColumn: '1 / -1' }}>
+              <label>Estrategia</label>
+              <select value={form.strategy} onChange={(e) => update('strategy', e.target.value)}>
+                <option value="ema_rsi_atr">EMA + RSI + ATR (tendencia)</option>
+                <option value="donchian">Donchian (ruptura de canal)</option>
+                <option value="mean_reversion">Reversión a la media (Bollinger)</option>
+              </select>
+            </div>
             <div className="field">
               <label>Timeframe</label>
               <select value={form.timeframe} onChange={(e) => update('timeframe', e.target.value)}>
@@ -157,22 +186,62 @@ export default function BacktestView() {
                 onChange={(e) => update('commission_per_lot', e.target.value)}
               />
             </div>
-            <div className="field">
-              <label>EMA rápida</label>
-              <input type="number" value={form.ema_fast} onChange={(e) => update('ema_fast', e.target.value)} />
-            </div>
-            <div className="field">
-              <label>EMA lenta</label>
-              <input type="number" value={form.ema_slow} onChange={(e) => update('ema_slow', e.target.value)} />
-            </div>
-            <div className="field">
-              <label>RSI long máx.</label>
-              <input type="number" value={form.rsi_long_max} onChange={(e) => update('rsi_long_max', e.target.value)} />
-            </div>
-            <div className="field">
-              <label>RSI short mín.</label>
-              <input type="number" value={form.rsi_short_min} onChange={(e) => update('rsi_short_min', e.target.value)} />
-            </div>
+
+            {form.strategy === 'ema_rsi_atr' ? (
+              <>
+                <div className="field">
+                  <label>EMA rápida</label>
+                  <input type="number" value={form.ema_fast} onChange={(e) => update('ema_fast', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>EMA lenta</label>
+                  <input type="number" value={form.ema_slow} onChange={(e) => update('ema_slow', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>RSI long máx.</label>
+                  <input type="number" value={form.rsi_long_max} onChange={(e) => update('rsi_long_max', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>RSI short mín.</label>
+                  <input type="number" value={form.rsi_short_min} onChange={(e) => update('rsi_short_min', e.target.value)} />
+                </div>
+              </>
+            ) : null}
+
+            {form.strategy === 'donchian' ? (
+              <>
+                <div className="field">
+                  <label>Canal (velas)</label>
+                  <input type="number" value={form.donchian_period} onChange={(e) => update('donchian_period', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>EMA tendencia (0=off)</label>
+                  <input type="number" value={form.trend_ema} onChange={(e) => update('trend_ema', e.target.value)} />
+                </div>
+              </>
+            ) : null}
+
+            {form.strategy === 'mean_reversion' ? (
+              <>
+                <div className="field">
+                  <label>Bollinger (velas)</label>
+                  <input type="number" value={form.bb_period} onChange={(e) => update('bb_period', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>Desvíos (std)</label>
+                  <input type="number" step="0.1" value={form.bb_std} onChange={(e) => update('bb_std', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>RSI compra ≤</label>
+                  <input type="number" value={form.mr_rsi_low} onChange={(e) => update('mr_rsi_low', e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>RSI venta ≥</label>
+                  <input type="number" value={form.mr_rsi_high} onChange={(e) => update('mr_rsi_high', e.target.value)} />
+                </div>
+              </>
+            ) : null}
+
             <div className="field">
               <label>SL (x ATR)</label>
               <input type="number" step="0.1" value={form.sl_atr} onChange={(e) => update('sl_atr', e.target.value)} />

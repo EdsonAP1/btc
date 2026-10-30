@@ -119,21 +119,32 @@ Al conectar, el bot recorre `mt5.symbols_get()`, filtra nombres con `BTC` / `XBT
 queda con el mejor y lo selecciona en Market Watch. Si no encuentra ninguno, prueba
 la lista de `symbol.fallbacks`. Todo queda visible en **Ajustes → Símbolo y conexión**.
 
-## Estrategia por defecto
+## Estrategias
 
-`ema_rsi_atr`:
+Se eligen con un clic en **Ajustes → Estrategia activa** (y en el backtester).
+El registro vive en `backend/app/core/strategy.py`.
 
-- **Tendencia**: EMA rápida (9) por encima/debajo de la EMA lenta (100) y precio del lado correcto.
-- **Filtro RSI** (14): evita comprar en sobrecompra extrema y vender en sobreventa extrema.
-- **Filtro de volatilidad**: exige ATR mínimo.
-- **SL/TP**: 2× ATR cada uno.
-- **Enfriamiento**: 2 velas entre operaciones.
-- **Opcional**: filtro de tendencia de largo plazo (`trend_ema`) y confirmación del modelo ML.
+| Estrategia | Lógica | Mejor timeframe |
+|---|---|---|
+| `ema_rsi_atr` | Cruce de EMAs 9/100 + filtro RSI + ATR. Tendencial. | M15 / H4 |
+| `donchian` | Ruptura del máximo/mínimo de N velas (20) con filtro EMA opcional. | M15 / H1 |
+| `mean_reversion` | Compra en banda inferior de Bollinger con RSI bajo, vende en la superior. | H1 / H4 |
 
-Los parámetros se editan en **Ajustes** o en `backend/config.json`. El *sweep* de
-desarrollo mostró que timeframes altos (H4) tienen mejor relación riesgo/beneficio,
-pero el default queda en **M15** para que el bot tenga actividad visible. Ajustalo
-con el backtester antes de ir a real.
+Resultados medidos con el spread real del broker (4.000 velas, riesgo 1%):
+
+| Estrategia | M15 | H1 | H4 |
+|---|---|---|---|
+| `ema_rsi_atr` | PF 0,98 · DD 10,3% | PF 0,92 · DD 17,7% | PF 1,10 · DD 9,2% |
+| `donchian` | PF 1,04 · DD 9,9% | PF 1,01 · DD 6,3% | PF 1,00 · DD 9,7% |
+| `mean_reversion` | PF 0,71 · DD 12,5% | PF **1,22** · DD **3,2%** | PF **1,17** · DD **6,0%** |
+
+Conclusión práctica: la reversión a la media sufre en M15 por el spread y rinde en
+H1/H4; Donchian es la más estable en M15. Cada estrategia tiene su timeframe —
+probalas en el backtester antes de dejarlas en vivo.
+
+Todas comparten: SL/TP por ATR, enfriamiento entre trades, filtro de volatilidad,
+filtro de tendencia opcional y confirmación opcional por ML.
+
 
 ## Gestión de salida
 
@@ -269,7 +280,7 @@ spread) y el ciclo completo del motor (abrir → cerrar operación).
 
 ## Limitaciones y próximos pasos
 
-- Una sola estrategia; el motor está preparado para agregar más (`strategy.name`).
+- Tres estrategias; agregar una nueva es registrar una función en `strategy.py`.
 - Sin optimizador walk-forward todavía.
 - Sin autenticación en la API: pensada para `127.0.0.1`. No la expongas a internet.
 - El bot necesita el terminal MT5 abierto y logueado.

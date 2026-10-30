@@ -151,6 +151,13 @@ def trades(
     return {"total": total, "items": items}
 
 
+@router.get("/strategies")
+def strategies() -> dict:
+    from .core.strategy import STRATEGY_META
+
+    return {"items": STRATEGY_META}
+
+
 @router.get("/metrics")
 def metrics(request: Request, mode: str | None = None) -> dict:
     cfg = load_config()

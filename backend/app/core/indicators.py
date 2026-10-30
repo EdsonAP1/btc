@@ -48,4 +48,21 @@ def enrich(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     trend_period = int(params.get("trend_ema") or 0)
     if trend_period > 0:
         out["ema_trend"] = ema(out["close"], trend_period)
+
+    # Canales Donchian (sin incluir la vela actual: shift(1)).
+    donchian = int(params.get("donchian_period") or 0)
+    if donchian > 0:
+        out["donchian_high"] = out["high"].rolling(donchian).max().shift(1)
+        out["donchian_low"] = out["low"].rolling(donchian).min().shift(1)
+
+    # Bandas de Bollinger.
+    bb_period = int(params.get("bb_period") or 0)
+    if bb_period > 0:
+        mid = out["close"].rolling(bb_period).mean()
+        std = out["close"].rolling(bb_period).std(ddof=0)
+        width = float(params.get("bb_std") or 2.0) * std
+        out["bb_mid"] = mid
+        out["bb_up"] = mid + width
+        out["bb_low"] = mid - width
+
     return out

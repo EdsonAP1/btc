@@ -174,25 +174,73 @@ export default function SettingsView({ onSaved }) {
             <div className="card-hint">{config.strategy.name}</div>
           </div>
           <div className="form-grid">
-            <div className="field">
-              <label>EMA rápida</label>
-              <input type="number" value={config.strategy.ema_fast} onChange={(e) => setField('strategy', 'ema_fast', Number(e.target.value))} />
+            <div className="field" style={{ gridColumn: '1 / -1' }}>
+              <label>Estrategia activa</label>
+              <select value={config.strategy.name} onChange={(e) => setField('strategy', 'name', e.target.value)}>
+                <option value="ema_rsi_atr">EMA + RSI + ATR (tendencia)</option>
+                <option value="donchian">Donchian (ruptura de canal)</option>
+                <option value="mean_reversion">Reversión a la media (Bollinger)</option>
+              </select>
             </div>
-            <div className="field">
-              <label>EMA lenta</label>
-              <input type="number" value={config.strategy.ema_slow} onChange={(e) => setField('strategy', 'ema_slow', Number(e.target.value))} />
-            </div>
+
+            {config.strategy.name === 'ema_rsi_atr' ? (
+              <>
+                <div className="field">
+                  <label>EMA rápida</label>
+                  <input type="number" value={config.strategy.ema_fast} onChange={(e) => setField('strategy', 'ema_fast', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>EMA lenta</label>
+                  <input type="number" value={config.strategy.ema_slow} onChange={(e) => setField('strategy', 'ema_slow', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>RSI máx. long</label>
+                  <input type="number" value={config.strategy.rsi_long_max} onChange={(e) => setField('strategy', 'rsi_long_max', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>RSI mín. short</label>
+                  <input type="number" value={config.strategy.rsi_short_min} onChange={(e) => setField('strategy', 'rsi_short_min', Number(e.target.value))} />
+                </div>
+              </>
+            ) : null}
+
+            {config.strategy.name === 'donchian' ? (
+              <>
+                <div className="field">
+                  <label>Canal (velas)</label>
+                  <input type="number" value={config.strategy.donchian_period} onChange={(e) => setField('strategy', 'donchian_period', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>EMA tendencia (0=off)</label>
+                  <input type="number" value={config.strategy.trend_ema ?? 0} onChange={(e) => setField('strategy', 'trend_ema', Number(e.target.value))} />
+                </div>
+              </>
+            ) : null}
+
+            {config.strategy.name === 'mean_reversion' ? (
+              <>
+                <div className="field">
+                  <label>Bollinger (velas)</label>
+                  <input type="number" value={config.strategy.bb_period} onChange={(e) => setField('strategy', 'bb_period', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>Desvíos (std)</label>
+                  <input type="number" step="0.1" value={config.strategy.bb_std} onChange={(e) => setField('strategy', 'bb_std', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>RSI compra ≤</label>
+                  <input type="number" value={config.strategy.mr_rsi_low} onChange={(e) => setField('strategy', 'mr_rsi_low', Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>RSI venta ≥</label>
+                  <input type="number" value={config.strategy.mr_rsi_high} onChange={(e) => setField('strategy', 'mr_rsi_high', Number(e.target.value))} />
+                </div>
+              </>
+            ) : null}
+
             <div className="field">
               <label>RSI período</label>
               <input type="number" value={config.strategy.rsi_period} onChange={(e) => setField('strategy', 'rsi_period', Number(e.target.value))} />
-            </div>
-            <div className="field">
-              <label>RSI máx. long</label>
-              <input type="number" value={config.strategy.rsi_long_max} onChange={(e) => setField('strategy', 'rsi_long_max', Number(e.target.value))} />
-            </div>
-            <div className="field">
-              <label>RSI mín. short</label>
-              <input type="number" value={config.strategy.rsi_short_min} onChange={(e) => setField('strategy', 'rsi_short_min', Number(e.target.value))} />
             </div>
             <div className="field">
               <label>ATR período</label>

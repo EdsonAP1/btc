@@ -81,6 +81,7 @@ def run_backtest(
         int(params["rsi_period"]),
         int(params.get("trend_ema") or 0),
         int(params.get("donchian_period") or 0),
+        int(params.get("bb_period") or 0),
     ) + 2
 
     def close_position(exit_price: float, reason: str, when: Any) -> None:
