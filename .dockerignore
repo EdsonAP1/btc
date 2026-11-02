@@ -1,0 +1,27 @@
+# Contexto de build mínimo para la imagen del bot
+.git
+.gitattributes
+.gitignore
+.venv
+venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+
+# Artefactos de build locales (se regeneran dentro de la imagen)
+frontend/node_modules
+frontend/dist
+
+# Datos sensibles / volúmenes en runtime
+backend/data
+backend/config.json
+.env
+.env.example
+
+# Documentación y scripts de Windows (no hacen falta en la imagen)
+docs
+scripts
+*.md
+setup.bat
+start.bat
+docker-compose.yml

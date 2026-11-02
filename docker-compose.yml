@@ -1,0 +1,50 @@
+# BTC Bot · Ubuntu Server 24/7 (Docker + Wine + MetaTrader 5)
+# Uso:  docker compose up -d
+# Docs: docs/DEPLOY_UBUNTU.md
+services:
+  btc-bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: btc-bot:latest
+    container_name: btc-bot
+    restart: unless-stopped      # sobreviene crashes y reinicios del servidor
+    stop_grace_period: 30s
+    ports:
+      # Panel + API. Cambiá HTTP_BIND en .env si querés exponerlo en la LAN.
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8000}:${HTTP_PORT:-8000}"
+      # noVNC: solo para instalar/login de MT5. Dejalo en 127.0.0.1
+      # (accedé con tunnel SSH) o usalo en LAN solo si tu red es de confianza.
+      - "${VNC_BIND:-127.0.0.1}:6080:6080"
+    environment:
+      TZ: ${TZ:-America/La_Paz}
+      PORT: ${HTTP_PORT:-8000}
+      AUTOSTART: ${AUTOSTART:-1}
+      AUTOSTART_MODE: ${AUTOSTART_MODE:-paper}
+      AUTOSTART_CONFIRM_REAL: ${AUTOSTART_CONFIRM_REAL:-false}
+      ENABLE_VNC: ${ENABLE_VNC:-1}
+      BACKUP_HOUR: ${BACKUP_HOUR:-4}
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+    volumes:
+      # Base de datos + config.json + backups
+      - botdata:/app/backend/data
+      # Prefijo Wine: instalación de MT5 + sesión guardada (auto-login)
+      - wineprefix:/wineprefix
+    shm_size: "1gb"              # Wine/MT5 pueden necesitar más que los 64MB default
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:${HTTP_PORT:-8000}/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s         # primera vez: instala Python/MT5 y compila nada
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"            # los logs no llenan el disco
+
+volumes:
+  botdata:
+    name: btc-bot-data
+  wineprefix:
+    name: btc-bot-wineprefix

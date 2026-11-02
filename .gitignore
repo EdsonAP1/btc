@@ -12,6 +12,9 @@ backend/models/
 backend/config.json
 *.log
 
+# Despliegue (nunca commitear configuración local)
+.env
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

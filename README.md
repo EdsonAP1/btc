@@ -53,6 +53,22 @@ el navegador. Para frenarlo, cerrá esa ventana o presioná `Ctrl+C`.
 > Si Windows SmartScreen bloquea el `.bat`, elegí *Más información → Ejecutar de todas formas*.
 > Si no tenés MetaTrader 5, el modo **Simulado** funciona igual.
 
+## Despliegue 24/7 en Ubuntu Server (Docker)
+
+Para correr el bot **24/7 en un servidor Ubuntu headless**, hay una imagen
+Docker que empaqueta **Wine + MetaTrader 5 + Python de Windows** (la API de
+MT5 solo existe para Windows):
+
+```bash
+git clone https://github.com/EdsonAP1/btc.git && cd btc
+cp .env.example .env          # revisá AUTOSTART_MODE (paper por defecto)
+docker compose up -d          # build + arranque; el bot inicia solo
+```
+
+Incluye auto-arranque del bot, watchdog, backup diario de la base y noVNC
+para instalar/loguear MT5 la primera vez.
+Guía completa paso a paso: **[docs/DEPLOY_UBUNTU.md](docs/DEPLOY_UBUNTU.md)**.
+
 ## Instalación manual
 
 ```powershell
